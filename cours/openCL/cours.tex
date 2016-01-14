@@ -1,0 +1,90 @@
+ls\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[francais]{babel}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{moreverb}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+
+\usetikzlibrary{arrows,positioning,automata,shadows,matrix,calc}
+
+\newcommand{\reporttitle}{Cours OpenCL }     % Titre
+\newcommand{\reportauthor}{- Henri Frank \textsc{ANABA}}% Auteur
+\newcommand{\reportsubject}{Programmation Multicoeur} % Sujet
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\setlength{\parskip}{1ex} % Espace entre les paragraphes
+
+\hypersetup{
+    pdftitle={\reporttitle},%
+    pdfauthor={\reportauthor},%
+    pdfsubject={\reportsubject},%
+    pdfkeywords={rapport} {vos} {mots} {clés}
+}
+
+\newcommand{\Aut}{\mathcal{A}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\ra}{\rightarrow}
+
+\begin{document}
+\include{title}
+\section{Rappel}
+\paragraph{}
+Parfois lorsqu'on code en openCL il y a des variables qui ne tiennent pas sur un coeur élémentaire. et donc celles ci sont déclarées en mémoire et on prend un surcoût (*2, *3). 
+
+\section{Transposition de matrice}
+\paragraph{}
+ on passe par une variable temporaire.
+
+\begin{verbatim}
+	__Kernel  transpose(__global Float *A,
+					.....                 *B)
+{
+	int x = get_global_id(0);
+	     y = get_global_id(1);
+
+	     xloc = get_local_id(0);
+	     yloc = get_local_id(1);
+
+	     tmp[xloc][yloc] = A[y*get_global_size(0) + x];
+	
+	barier (CLK_LOCAL_MEM_FENCE);
+	$$$ B[get_global_size(1)*(get_group_id(0)*get_local_size(0))+yloc	
+	      + get_group_id(1)	* get_local_size(1) + xloc]=tmp
+
+}
+\end{verbatim}
+
+\section{Stencil}
+!!!!!!!! chargement de tuile
+	tile  "OpenCL Best Practice Guide" 
+Il existe QDA aussi similaire à OpenCL
+
+\begin{verbatim}
+__kernel stencil2D(A,B)
+	B[i][j] = C0 * A[][]
+\end{verbatim}
+
+\paragraph{}
+En motifiant le programme de la transposée en rajoutant +1 dans la variable tmp
+__local Float tm[TILE][TILE1];
+le programme va plus vite. 
+Car les threads qui était en ligne , il écrive en colonne. sur des bancs physiques différents. 
+(ruse pour accélerer le programme).
+
+\section{}
+\paragraph{}
+\today
+\paragraph{}
+xeon hi acptuel : Knight Corner(knc)\\
+	 		   Knight Landing(knl)\\
+
+
+
+\paragraph{}
+Des intructions ont été rajoutées  pour palier la diffuclté du openCL.
+
+\end{document}
+

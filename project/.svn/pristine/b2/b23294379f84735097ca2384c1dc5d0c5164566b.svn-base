@@ -1,0 +1,586 @@
+\documentclass[a4paper,11pt]{report}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[francais]{babel}
+\usepackage{graphicx}
+\usepackage{verbatim}
+\usepackage{moreverb}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{latexsym}
+\usepackage{ucs}
+
+\usetikzlibrary{arrows,positioning,automata,shadows,matrix,calc}
+
+\usepackage{amsthm}
+\newtheorem{corollary}{Corollaire}[section]
+\newtheorem{definition}{Définition}[section]
+\newtheorem{example}{Exemple}[section]
+\newtheorem{lemma}{Lemme}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{remark}{Remarque}[section]
+\newtheorem{theorem}{Théorème}[section]
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\newcommand{\reporttitle}{SIMULATION DE PARTICULES SUR ARCHITECTURES PARALLÈLES}     % Titre
+\newcommand{\reportauthor}{- Henri Frank \textsc{ANABA}\\ - Olivier \textsc{Constant}}% Auteur
+\newcommand{\reportsubject}{Programmation Multicoeur} % Sujet
+
+\hypersetup{
+    pdftitle={\reporttitle},%
+    pdfauthor={\reportauthor},%
+    pdfsubject={\reportsubject},%
+    pdfkeywords={rapport} {vos} {mots} {clés}
+}
+
+\lstdefinestyle{CStyle}{ 
+  language=C,
+  basicstyle=\small\sffamily,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=tb,
+  columns=fullflexible,
+  backgroundcolor=\color{blue!20},
+  linewidth=0.9\linewidth, 
+  xleftmargin=0.1\linewidth }
+
+
+
+\begin{document}
+
+\newcommand{\Aut}{\mathcal{A}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathcal{R}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+%\begin{titlingpage}
+\begin{center}
+
+\begin{minipage}[t]{0.48\textwidth}
+  \begin{flushleft}
+    \includegraphics [width=50mm]{images/index.png} \\[0.5cm]
+  \end{flushleft}
+\end{minipage}
+\begin{minipage}[t]{0.48\textwidth}
+  \begin{flushright}
+  %  \includegraphics [width=30mm]{images/logo-societe.jpg} \\[0.5cm]
+   % \textsc{\LARGE Entreprise}
+  \end{flushright}
+\end{minipage} \\[1.5cm]
+
+\textsc{\Large \reportsubject}\\[0.5cm]
+\HRule \\[0.4cm]
+{\huge \bfseries \reporttitle}\\[0.4cm]
+\HRule \\[1.5cm]
+
+\begin{minipage}[t]{0.6\textwidth}
+  \begin{flushleft} \large
+    \emph{Auteurs :}\\ 
+    \reportauthor
+  \end{flushleft}
+\end{minipage}
+
+\hfill
+
+
+\begin{minipage}[t]{0.6\textwidth}
+  \begin{flushright} \large
+    \emph{Responsable :} \\
+    M.~R \textsc{NAMYST}\\
+  \end{flushright}
+\end{minipage}
+
+\vfill
+
+{\large 18 mars 2015}
+
+\end{center}
+
+%\end{titlingpage}
+
+\newpage
+
+%\frontmatter
+\begingroup
+%\setlength{\beforechapskip}{0pt} % or any other dimension
+\tableofcontents*
+\endgroup
+
+%\mainmatter
+
+
+\chapter{Présentation du sujet}
+
+\paragraph{}
+Dans le cadre du module d'enseignement de programmation parallèle, nous devons réaliser un projet. Ce projet consiste en la conception d'une application de simulation de particules dans un domaine en trois dimensions. Pour ce faire, il a été mis à notre disposition un rendu OpenGL des particules ainsi que son code et une version séquentielle du code. Le rendu permet de visualiser la simulation en temps réel. Le but étant que nous nous concentrions uniquement sur l'accélération des calculs en parallèle.
+\paragraph{}
+Ce rapport présente le travail réalisé par le binôme constitué de Henri Frank \textbf{ANABA} et d'Olivier \textbf{CONSTANT}.Il est en effet le compte-rendu de la réalisation  de la première partie du projet : la partie \textbf{OpenMP}. 
+
+
+\chapter{Traitement du sujet}
+\section{Parallélisation avec \textbf{OpenMP}}
+
+
+\subsection{Parallélisation des boucles}
+
+\paragraph{}
+La réalisation de la version de base consistait juste en une parallélisation des boucles de la version séquentielle. Pour ce, nous avons choisi d'utiliser la directive OpenMP pour la parallélisation des boucles \textbf{for} \#pragma omp for. Toutefois, pour réduire au maximum l'appel au \#pragma omp parallel, nous l'avons mis dans la fonction de calcul après un saut d'horloge:
+
+
+\begin{lstlisting}[style=CStyle]
+void omp_one_step_move (sotl_device_t *dev)
+{
+  #pragma omp parallel
+  ...
+  }
+\end{lstlisting}
+
+\paragraph{}
+Pour chaque fonction appelée par la fonction principale de simulation, nous avons optimisé le calcul des boucles for.Dans la fonction, \textbf{omp\_update\_vbo}, parallélisation de la boucle de mise à jour des vitesses des atomes :
+\newline
+
+\begin{lstlisting}[style=CStyle]
+
+static void omp_update_vbo (sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+  sotl_domain_t *domain = &dev->domain;
+
+ 
+  #pragma omp for
+  for (unsigned n = 0; n < set->natoms; n++) {
+    ...
+  }
+  
+}
+\end{lstlisting}
+
+\paragraph{}
+Dans la fonction, \textbf{omp\_move}, parallélisation de la boucle de mise à jour des vitesses de chaque atome :
+\newline
+\begin{lstlisting}[style=CStyle]
+static void omp_move (sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+
+  #pragma omp for
+  for (unsigned n = 0; n < set->natoms; n++) {
+    set->pos.x[n] += set->speed.dx[n];
+    set->pos.y[n] += set->speed.dy[n];
+    set->pos.z[n] += set->speed.dz[n];
+  }
+}
+
+\end{lstlisting}
+\paragraph{}
+Dans la fonction, \textbf{omp\_ gravity}, parallélisation de l'application de la gravité aux vitesses des atoms:
+\newline
+\begin{lstlisting}[style=CStyle]
+static void omp_gravity (sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+  const calc_t g = 0.005;
+  #pragma omp for
+   for (unsigned current = 0; current < set->natoms; current++) {
+	set->speed.dy[current] = set->speed.dy[current]-g;
+  }
+}
+\end{lstlisting}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{}
+Dans la fonction \textbf{omp\_bounce}, parallélisation de ...
+
+\begin{lstlisting}[style=CStyle]
+static void omp_bounce (sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+  sotl_domain_t *domain = &dev->domain;
+    #pragma omp for
+     for (unsigned current = 0; current < set->natoms; current++) {
+	...
+  }
+}
+\end{lstlisting}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{}
+Dans la fonction \textbf{tri}, parallélisation des boucles de permutation des atomes lors du tri:
+\newline
+\begin{lstlisting}[style=CStyle]
+void tri(sotl_atom_set_t * set){
+
+  int paire = (set->natoms%2==0)?1:0;
+  int impaire = (set->natoms%2==0)?0:1;
+  for(unsigned i=0; i<set->natoms; i++){
+    if(i%2==0){
+
+      #pragma omp for
+      for(unsigned j =0; j<set->natoms-impaire;j+=2){
+	if(set->pos.z[j]<set->pos.z[j+1]){
+	 echange(set,j,j+1);
+	}
+      }
+    }else{
+
+      #pragma omp for
+      for(unsigned j=1;j<(set->natoms-paire);j+=2){
+	if(set->pos.z[j]<set->pos.z[j+1]){
+	  echange(set,j,j+1);
+      }
+    }
+  }
+}
+}
+
+\end{lstlisting}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{}
+Dans la fonction \textbf{omp\_force}, parallélisation des boucles de calcul des forces d'interactions entre les atomes:
+\newline
+
+\begin{lstlisting}[style=CStyle]
+static void omp_force (sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+  tri(set);
+  
+  #pragma omp for
+  for (unsigned current = 0; current < set->natoms; current++) {
+    ...
+  }
+
+ //atome Z inferieur
+ #pragma omp for
+ for(int other = current+1;other<set->natoms;other++){
+   ...
+	}
+    }
+  }
+
+}
+\end{lstlisting}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Mise en place de la stratégie \textbf{<< frist touch >>}}
+\paragraph{}
+Le principe de  cette stratégie étant l'allocation d'un bloc de donnée le plus prêt possible de l'endroit où le code va s'exécuter. Pour ce faire, nous avons créé une fonction \textbf{first\_touch} qui fait une manipulation des données sans modification afin que les valeurs par défaut ne soient pas perdues. 
+\newline
+\begin{lstlisting}[style=CStyle]
+void first_touch(sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+  sotl_domain_t *domain = &dev->domain;
+
+ #pragma omp for
+  for (unsigned current_atom=0;  current_atom< set->natoms; current_atom++)
+  {
+    vbo_vertex[current_atom*3 + 0] += 0;
+    vbo_vertex[current_atom*3 + 1] += 0;
+    vbo_vertex[current_atom*3 + 2] += 0;
+
+    set->pos.x[current_atom]+=0;
+    set->speed.dx[current_atom]+=0;
+    set->pos.y[current_atom]+=0;
+    set->speed.dy[current_atom]+=0;
+    set->pos.z[current_atom]+=0;
+    set->speed.dz[current_atom]+=0;
+
+    // Atom color depends on z coordinate
+    
+      float rate= domain->min_ext[2] / (domain->max_ext[2]);
+      
+      vbo_color[current_atom*3 + 0] += 0;
+      vbo_color[current_atom*3 + 1] += 0;
+      vbo_color[current_atom*3 + 2] += 0;
+      atom_state[current_atom] =  atom_state[current_atom] + rate - rate;
+  }
+
+}
+
+\end{lstlisting}
+\paragraph{}
+Cette fonction est appellée lors de l'initialisation d'une simulation en parallèle. 
+\newline
+
+\begin{lstlisting}[style=CStyle]
+void omp_init (sotl_device_t *dev)
+{
+
+#ifdef _SPHERE_MODE_
+  ...
+#endif
+  first_touch(dev);
+  borders_enabled = 1;
+
+  dev->compute = SOTL_COMPUTE_OMP; // dummy op to avoid warning
+}
+\end{lstlisting}
+\subsection{tri suivant z }
+\paragraph{}
+Pour éviter les calculs inutiles, une solution était de trier les atomes suivant l'axe z. Ainsi pour un atome donné, le calcul du potentiel de \textit{Lennard Jones} n'est effectué que pour les atomes se situant à une distance inférieure au rayon de coupure. Les autres n'interagissant pas.Notre implémentation du tri  suivant Z a été faite dans la fonction \textbf{tri}.
+\newline
+\begin{lstlisting}[style=CStyle]
+void tri(sotl_atom_set_t * set){
+
+  int paire = (set->natoms%2==0)?1:0;
+  int impaire = (set->natoms%2==0)?0:1;
+  for(unsigned i=0; i<set->natoms; i++){
+    if(i%2==0){
+      #pragma omp parallel num_threads(NB_THREAD )
+      #pragma omp for schedule(static)
+      for(unsigned j =0; j<set->natoms-impaire;j+=2){
+	if(set->pos.z[j]<set->pos.z[j+1]){
+	 echange(set,j,j+1);
+	}
+      }
+    }else{
+      #pragma omp parallel num_threads(NB_THREAD )
+      #pragma omp for schedule(static)
+      for(unsigned j=1;j<(set->natoms-paire);j+=2){
+	if(set->pos.z[j]<set->pos.z[j+1]){
+	  echange(set,j,j+1);
+      }
+    }
+  }
+}
+}
+
+\end{lstlisting}
+
+\paragraph{}
+Pour faciliter le tri, nous avons implémenté une fonction d'échange qui fait l'échange de position entre deux atomes d'un même  tableau.
+\newline
+\begin{lstlisting}[style=CStyle]
+
+void echange(sotl_atom_set_t * set, int a, int b){
+	calc_t tmpx;
+	calc_t tmpy;	
+	calc_t tmpz;
+	calc_t tmpsx;
+	calc_t tmpsy;
+	calc_t tmpsz;
+
+	tmpx = set->pos.x[a];
+	tmpy = set->pos.y[a];
+	tmpz = set->pos.z[a];
+	tmpsx = set->speed.dx[a];
+	tmpsy = set->speed.dy[a];
+	tmpsz = set->speed.dz[a];
+
+	set->pos.x[a] = set->pos.x[b];
+	set->pos.y[a] = set->pos.y[b];
+	set->pos.z[a] = set->pos.z[b];
+	set->speed.dx[a] = set->speed.dx[b];
+	set->speed.dy[a] = set->speed.dy[b];
+	set->speed.dz[a] = set->speed.dz[b];
+
+	set->pos.x[b] = tmpx;
+	set->pos.y[b] = tmpy;
+	set->pos.z[b] = tmpz;
+	set->speed.dx[b] = tmpsx;
+	set->speed.dy[b] = tmpsy;
+	set->speed.dz[b] = tmpsz;
+
+}
+\end{lstlisting}
+
+\paragraph{}
+Une fois les atomes triés, la fonction de calcul des interactions utilise les considérations du tri pour n'évaluer que les 
+atomes se portant au calcul.
+\newline 
+\begin{lstlisting}[style=CStyle]
+
+static void omp_force (sotl_device_t *dev)
+{
+  sotl_atom_set_t *set = &dev->atom_set;
+  tri(set);
+
+  #pragma omp parallel num_threads(NB_THREAD )
+  #pragma omp for schedule(static)
+  for (int current = 0; current < (int)set->natoms; current++) {
+    calc_t force[3] = { 0.0, 0.0, 0.0 };
+
+    //atome Z supperieur
+    for(int other = current-1;other>-1;other--){
+		
+	if(abs(set->pos.z[current]-set->pos.z[other]) 
+	  	> LENNARD_SQUARED_CUTOFF) {
+		break;
+	}else{
+		calc_t sq_dist = squared_distance (set, current, other);
+		if (sq_dist < LENNARD_SQUARED_CUTOFF) {
+	  		calc_t intensity = lennard_jones (sq_dist);
+
+	  		force[0] += intensity 
+					* (set->pos.x[current] 
+					   - set->pos.x[other]);
+	  		force[1] += intensity 
+					* (set->pos.x[set->offset + current]
+				            -set->pos.x[set->offset + other]);
+	 		force[2] += intensity 
+					*(set->pos.x[set->offset * 2 + current] 
+				   	 -set->pos.x[set->offset * 2 + other]);
+		}
+	}
+    }
+    //atome Z inferieur
+    for(int other = current+1;other<(int)set->natoms;other++){
+	if(abs(set->pos.z[current]-set->pos.z[other])
+		 > LENNARD_SQUARED_CUTOFF){
+		break;
+	}else{
+		calc_t sq_dist = squared_distance (set, current, other);
+		if (sq_dist < LENNARD_SQUARED_CUTOFF) {
+	  		calc_t intensity = lennard_jones (sq_dist);
+
+	  		force[0] += intensity 
+					* (set->pos.x[current] 
+					   - set->pos.x[other]);
+		  	force[1] += intensity * (set->pos.x[set->offset + current] 
+				   	-set->pos.x[set->offset + other]);
+			force[2] += intensity 
+					* (set->pos.x[set->offset * 2 + current] 
+					-set->pos.x[set->offset * 2 + other]);
+	}
+	}
+    }
+    set->speed.dx[current] += force[0];
+    set->speed.dx[set->offset + current] += force[1];
+    set->speed.dx[set->offset * 2 + current] += force[2];
+	
+  }
+}
+\end{lstlisting}
+\paragraph{}
+On remarque que l'algorithme peut être divisé en deux phases. Pour un atome donné, on regarde, suivant l'axe z, ses voisins qui interagissent avec lui: d'une part ceux qui on une coordonnée \textit{z} inférieure à la sienne et d'autre  part ceux avec la coordonnée supérieure.
+
+
+\subsection{tri par boite}
+Toujours dans l'optique d'accélérer les calculs, nous avons implémenté un tri par boite. tout comme le tri suivant z, l'idée est de n'évaluer que les atomes se trouvant dans les 26 cubes entourant le cube de a et dans le cube lui même. L'algorithme de ce tri nous a été fourni. Nous l'avons implémenter en combinant le tri et le calcul des forces dans la même fonction (\textbf{omp\_force\_cube})
+\newline 
+\begin{lstlisting}[style=CStyle]
+void omp_force_cube(sotl_device_t *dev){
+	
+  sotl_atom_set_t *set = &dev->atom_set;
+  sotl_domain_t *domain = &dev->domain;
+
+  sotl_atom_set_t *in = malloc(sizeof(sotl_atom_set_t));
+  atom_set_init(in,set->natoms,set->offset);
+
+ 
+  for(int i=0; i<(int)set->natoms; i++){
+    atom_set_add(in,set->pos.x[i],set->pos.y[i],set->pos.z[i],
+			set->speed.dx[i],set->speed.dy[i],set->speed.dz[i]);
+  }
+
+  int NbCubes = (int) domain->total_boxes;
+
+  int* boite= calloc(NbCubes,sizeof(int));
+  int* boiten= calloc(NbCubes,sizeof(int));
+
+  for(int i= 0; i < (int)in->natoms; i++){
+    int numb =atom_get_num_box(domain,in->pos.x[i],in->pos.y[i],
+			in->pos.z[i],LENNARD_SQUARED_CUTOFF);
+    boite[numb]++;
+    boiten[numb]++;
+  }
+
+  
+  for (int i = 1; i < NbCubes; i++){
+    boite[i] += boite[i-1];
+  }
+	
+  for(int i = 0; i < (int)in->natoms; i++){
+    int numb =atom_get_num_box(domain,in->pos.x[i],in->pos.y[i],
+		   in->pos.z[i],LENNARD_SQUARED_CUTOFF);
+    
+    int indice = boite[numb-1]+boiten[numb]-1;
+    set->pos.x[indice]=in->pos.x[i];
+    set->pos.y[indice]=in->pos.y[i];
+    set->pos.z[indice]=in->pos.z[i];
+    set->speed.dx[indice]=in->speed.dx[i];
+    set->speed.dy[indice]=in->speed.dy[i];
+    set->speed.dz[indice]=in->speed.dz[i];
+    boiten[numb]--;	
+  }
+    #pragma omp parallel num_threads(NB_THREAD )
+    #pragma omp for schedule(static)
+    for (int current = 0; current < (int)set->natoms; current++) {
+      calc_t force[3] = { 0.0, 0.0, 0.0 };
+
+      int bx =(int)((set->pos.x[current] - domain->min_border[0]) 
+			*LENNARD_SQUARED_CUTOFF);
+      int by =(int)((set->pos.y[current] - domain->min_border[1]) 
+			*LENNARD_SQUARED_CUTOFF);
+      int bz =(int)((set->pos.z[current] - domain->min_border[2]) 
+			*LENNARD_SQUARED_CUTOFF);
+      
+      for(int z =(bz==0)?bz:bz-1; 
+		   z<= bz+1 && z<(int)domain->boxes[2]; z++){
+	for(int y=(by==0)?by:by-1; 
+		  y<= by+1 && y<(int)domain->boxes[1]; y++){
+	  for(int x=(bx==0)?bx:bx-1;
+		 x<=bx+1 && x<(int)domain->boxes[0];x++){
+            int numb = z * domain->boxes[0]* domain->boxes[1] 
+				+ y * domain->boxes[0] + x;
+	    for(int other =(numb==0)?boite[0]:boite[numb-1]; 
+		other<boite[numb]; other++){
+	      if(current != other){
+                calc_t sq_dist = squared_distance (set, current, other);
+
+		if (sq_dist < LENNARD_SQUARED_CUTOFF) {
+		  calc_t intensity = lennard_jones (sq_dist);
+		  force[0] += intensity 
+				* (set->pos.x[current] - set->pos.x[other]);
+		  force[1] += intensity 
+				* (set->pos.x[set->offset + current] 
+			            -set->pos.x[set->offset + other]);
+		  force[2] += intensity 
+				* (set->pos.x[set->offset * 2 + current] 
+				   -set->pos.x[set->offset * 2 + other]);
+		}
+	      }
+	    }
+	  }
+	}
+      } 
+	
+	set->speed.dx[current] += force[0];
+        set->speed.dx[set->offset + current] += force[1];
+        set->speed.dx[set->offset * 2 + current] += force[2];
+    }
+    
+    free(boiten);
+    atom_set_free(in);
+    free(in);
+    free(boite);
+  }
+
+\end{lstlisting}
+
+\section{Expérimentations}
+\paragraph{}
+Les expériences consistent en la présentation des courbes d'accélération par la variation du nombre de processeurs utilisés. Ainsi qu'en l'interprétation des résultats. 
+pour ce faire, nous avons 
+\subsection{Variations sur le domaine initiale}
+\subsection{Variations sur la politique de distribution d'indices}
+\subsection{Variations sur le placement des threads et de la mémoire}
+%mesure de l'influence de la variable GOMP_CPU_AFFINIY
+\subsection{Variation sur le type de machine}
+%\chapter{}
+
+
+\end{document}

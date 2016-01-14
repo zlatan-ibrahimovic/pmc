@@ -1,0 +1,2 @@
+/Users/frankanaba/Downloads/pmcproject/trunk/openCL/fichiers/CMakeFiles/atoms.dir
+/Users/frankanaba/Downloads/pmcproject/trunk/openCL/fichiers/libsotl/CMakeFiles/sotl.dir

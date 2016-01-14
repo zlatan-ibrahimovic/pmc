@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/net/cremi/hanaba/M1/S2/pmc/openMP/project/pmcproject/trunk/openCL/fichiers/libsotl/src/global_definitions.c
+global_definitions.h
+/net/cremi/hanaba/M1/S2/pmc/openMP/project/pmcproject/trunk/openCL/fichiers/libsotl/src/global_definitions.h
+
+libsotl/include/global_definitions.h
+stdbool.h
+-
+

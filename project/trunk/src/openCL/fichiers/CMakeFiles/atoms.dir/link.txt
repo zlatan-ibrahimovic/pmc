@@ -1,0 +1,1 @@
+/usr/bin/cc   -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/atoms.dir/src/main.c.o CMakeFiles/atoms.dir/src/tools.c.o  -o bin/atoms  libsotl/libsotl.dylib -framework OpenCL /usr/lib/libm.dylib -framework AGL -framework OpenGL -framework GLUT -framework Cocoa 

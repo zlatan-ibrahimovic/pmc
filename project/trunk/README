@@ -1,0 +1,18 @@
+
+	******* PROJET DE PROGRAMMATION PARALLELE ********
+
+** Le code source du projet est dans src/ 
+	> La partie OpenMP est dans src/openMP/
+	> La partie OpenCL est dans src/openCL/
+
+	> Il y a en plus dans src un module qui réalise la somme préfixée d’un tableau de 	  1024 entiers. src/prescan_0.1
+		Pour le mettre en route faire 
+			make 
+			./prescan 
+
+		Les résultats apparaissent sur la sortie standard. les variables print_A
+		et print_B du fichier persan.c permettent de limiter le nombre de valeurs
+		affichées dans chaque tableau A (tableau en entrée) et B (tableau
+		résultat en vert).
+
+** Le rapport et toutes ses sources sont dans doc/
